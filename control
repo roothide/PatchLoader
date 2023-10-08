@@ -1,0 +1,9 @@
+Package: com.roothide.patchloader
+Name: PatchLoader
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: RootHide Dynamic Patches Loader
+Maintainer: roothide
+Author: roothide
+Section: System
+Tag: role::developer
