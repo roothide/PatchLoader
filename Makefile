@@ -7,9 +7,9 @@ include $(THEOS)/makefiles/common.mk
 
 LIBRARY_NAME = roothidepatch
 
-PatchLoader_FILES = PatchLoader.c
-PatchLoader_CFLAGS = -fobjc-arc
-PatchLoader_INSTALL_PATH = /usr/lib
+$(LIBRARY_NAME)_FILES = PatchLoader.c
+$(LIBRARY_NAME)_CFLAGS = -fobjc-arc
+$(LIBRARY_NAME)_INSTALL_PATH = /usr/lib
 
 include $(THEOS_MAKE_PATH)/library.mk
 

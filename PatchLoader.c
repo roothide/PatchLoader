@@ -32,16 +32,33 @@ static void image_load_handler(const char* path, const struct mach_header *heade
 
 static void image_load_callback(const struct mach_header *header, intptr_t slide)
 {
-    int c=_dyld_image_count();
-    for(int i=0; i<c; i++) {
+    int count = _dyld_image_count();
+    for(int i=0; i<count; i++) {
         if(header == _dyld_get_image_header(i)) {
             const char* path = _dyld_get_image_name(i);
+            //printf("image-load %p %p %s\n", header, (void*)slide, path);
             if(!_dyld_shared_cache_contains_path(path))
                 image_load_handler(path, header, slide);
             break;
         }
     }
 }
+
+
+// int proc_regionfilename(int pid, void* address, void * buffer, uint32_t buffersize);
+
+// static void image_load_callback(const struct mach_header *header, intptr_t slide)
+// {
+//     printf("image-load %p %p\n", header, slide);
+//
+//     char path[PATH_MAX]={0};
+//     if(proc_regionfilename(getpid(), (void*)header, path, sizeof(path)) > 0)
+//     {
+//         if(!_dyld_shared_cache_contains_path(path))
+//             image_load_handler(path, header, slide);
+//     }
+
+// }
 
 static void __attribute__((constructor)) initializer()
 {
