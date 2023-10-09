@@ -10,7 +10,7 @@
 
 int64_t (*jbdswDebugMe)(void)=NULL;
 
-typedef void (*PatchLoader)(const char* path, const struct mach_header *header, intptr_t slide);
+typedef void (*InitPatches)(const char* path, const struct mach_header *header, intptr_t slide);
 
 static void image_load_handler(const char* path, const struct mach_header *header, intptr_t slide)
 {
@@ -23,10 +23,10 @@ static void image_load_handler(const char* path, const struct mach_header *heade
         void* handler = dlopen(patcher, RTLD_NOW);
         assert(handler != NULL);
         
-        void* patchloader = dlsym(handler, "PatchLoader");
-        assert(patchloader != NULL);
+        void* initpatches = dlsym(handler, "InitPatches");
+        assert(initpatches != NULL);
 
-        ((PatchLoader)patchloader)(path,header,slide);
+        ((InitPatches)initpatches)(path,header,slide);
     }
 }
 
