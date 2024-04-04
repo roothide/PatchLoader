@@ -3,6 +3,9 @@ TARGET := iphone:clang:latest:15.0
 
 THEOS_PACKAGE_SCHEME = roothide
 
+FINALPACK = 1
+DEBUG ?= 0
+
 include $(THEOS)/makefiles/common.mk
 
 LIBRARY_NAME = roothidepatch

@@ -8,10 +8,14 @@
 #include <mach-o/loader.h>
 #include <sys/syslimits.h>
 
+#if DEBUG == 1
 #include <sys/syslog.h>
 #define SYSLOG(...) {openlog("roothide",LOG_PID,LOG_AUTH);syslog(LOG_DEBUG, __VA_ARGS__);closelog();}
+#else
+#define SYSLOG(...)
+#endif
 
-int64_t (*jbdswDebugMe)(void) = NULL;
+int64_t (*PLRequiredJIT)(void) = NULL;
 
 typedef void (*InitPatches)(const char *path, const struct mach_header *header, intptr_t slide);
 
@@ -20,8 +24,10 @@ static void image_load_handler(const char *path, const struct mach_header *heade
     char patcher[PATH_MAX] = {0};
     snprintf(patcher, sizeof(patcher), "%s.roothidepatch", path);
     if (access(patcher, F_OK) == 0)
-    {
-        assert(jbdswDebugMe() == 0);
+    {            
+        SYSLOG("PatchLoader: load patcher %s\n", patcher);
+
+        assert(PLRequiredJIT() == 0);
 
         void *handler = dlopen(patcher, RTLD_NOW);
         assert(handler != NULL);
@@ -31,6 +37,12 @@ static void image_load_handler(const char *path, const struct mach_header *heade
 
         ((InitPatches)initpatches)(path, header, slide);
     }
+/*
+    /Library/dpkg/tmp.ci/: preinst  extrainst_  
+    /Library/dpkg/info/: postinst prerm postrm 
+
+    /var/mobile/Library/pkgmirror/DEBIAN.
+*/
 }
 
 bool load_init=false;
@@ -45,9 +57,10 @@ static void image_load_callback(const struct mach_header *header, intptr_t slide
         if (header == _dyld_get_image_header(i))
         {
             const char *path = _dyld_get_image_name(i);
-            //SYSLOG("PatchLoader: image-load %p %p %s\n", header, (void *)slide, path);
-            if (!_dyld_shared_cache_contains_path(path))
+            if (!_dyld_shared_cache_contains_path(path)) {
+                SYSLOG("PatchLoader: new image %p %p %s\n", header, (void *)slide, path);
                 image_load_handler(path, header, slide);
+            }
             break;
         }
     }
@@ -68,7 +81,8 @@ static void image_load_callback(const struct mach_header *header, intptr_t slide
 
 static void __attribute__((constructor)) initializer()
 {
-    *(void **)&jbdswDebugMe = dlsym(RTLD_DEFAULT, "jbdswDebugMe");
+    *(void **)&PLRequiredJIT = dlsym(RTLD_DEFAULT, "PLRequiredJIT");
+    if(!PLRequiredJIT) *(void **)&PLRequiredJIT = dlsym(RTLD_DEFAULT, "jbdswDebugMe");
 
     _dyld_register_func_for_add_image(image_load_callback);
 
@@ -80,8 +94,10 @@ static void __attribute__((constructor)) initializer()
         void* header = (void*)_dyld_get_image_header(i);
         uint64_t slide = _dyld_get_image_vmaddr_slide(i);
         const char *path = _dyld_get_image_name(i);
-        if (!_dyld_shared_cache_contains_path(path))
+        if (!_dyld_shared_cache_contains_path(path)) {
+            SYSLOG("PatchLoader: loaded image %p %p %s\n", header, (void *)slide, path);
             image_load_handler(path, header, slide);
+        }
     }
 
     load_init=true;
