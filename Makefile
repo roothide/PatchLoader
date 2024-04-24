@@ -11,7 +11,7 @@ include $(THEOS)/makefiles/common.mk
 LIBRARY_NAME = roothidepatch
 
 $(LIBRARY_NAME)_FILES = PatchLoader.c
-# $(LIBRARY_NAME)_CFLAGS = -fobjc-arc
+$(LIBRARY_NAME)_CFLAGS = -fvisibility=hidden # make PLRequiredJIT not exported
 $(LIBRARY_NAME)_INSTALL_PATH = /usr/lib
 
 include $(THEOS_MAKE_PATH)/library.mk
