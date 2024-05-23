@@ -22,6 +22,8 @@ before-package::
 	mkdir -p $(THEOS_STAGING_DIR)/var
 	ln -s / $(THEOS_STAGING_DIR)/var/jb
 
+	mkdir -p $(THEOS_STAGING_DIR)/rootfs/var
+
 	mkdir -p $(THEOS_STAGING_DIR)/$(MIRROR_PATH)/var
 	ln -s $(MIRROR_PATH) $(THEOS_STAGING_DIR)/$(MIRROR_PATH)/var/jb
 
