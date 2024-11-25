@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if [ -d /var/jb ]; then
+  rm -rf /var/jb
+  ln -s / /var/jb
+fi

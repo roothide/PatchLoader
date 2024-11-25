@@ -8,6 +8,17 @@
 #include <mach-o/loader.h>
 #include <sys/syslimits.h>
 
+
+#define SIGABRT 6
+#define OS_REASON_SIGNAL        2
+#define OS_REASON_DYLD          6
+#define DYLD_EXIT_REASON_OTHER                  9
+
+void abort_with_payload(uint32_t reason_namespace, uint64_t reason_code, void *payload, uint32_t payload_size, const char *reason_string, uint64_t reason_flags) __attribute__((noreturn, cold));
+
+#define	ABORT_WITH(e)	abort_with_payload(OS_REASON_DYLD,DYLD_EXIT_REASON_OTHER,NULL,0, e, 0)
+
+
 #if DEBUG == 1
 #include <sys/syslog.h>
 #define SYSLOG(...) {openlog("roothide",LOG_PID,LOG_AUTH);syslog(LOG_DEBUG, __VA_ARGS__);closelog();}
@@ -30,7 +41,11 @@ static void image_load_handler(const char *path, const struct mach_header *heade
         assert(PLRequiredJIT() == 0);
 
         void *handler = dlopen(patcher, RTLD_NOW);
-        assert(handler != NULL);
+        if(!handler) {
+            static char buf[4096]={0};
+            snprintf(buf,sizeof(buf),"dlopen %s : %s",patcher, dlerror());
+            ABORT_WITH(buf);
+        }
 
         void *initpatches = dlsym(handler, "InitPatches");
         assert(initpatches != NULL);
