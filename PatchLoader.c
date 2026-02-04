@@ -49,11 +49,11 @@ static void image_load_handler(const char *path, const struct mach_header *heade
     {
         SYSLOG("PatchLoader: load patcher %s\n", patcher);
 
-        int r = access(jbroot("/var/jb"), F_OK);
-        if(r != 0) {
+        struct stat st={0};
+        if(lstat(jbroot("/var/jb"), &st)!=0 || !S_ISLNK(st.st_mode)) {
             const char* prog_image_path = dyld_image_path_containing_address(_dyld_get_prog_image_header());
             if(strstr(prog_image_path, ".app/")) {
-                ABORT_WITH("PatchLoader: jbroot:/var/jb is broken! try reinstalling PatchLoader Package.");
+                ABORT_WITH("PatchLoader: jbroot:/var/jb is broken! try reinstalling PatchLoader package.");
                 return;
             }
         }
